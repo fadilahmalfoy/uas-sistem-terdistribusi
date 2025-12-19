@@ -63,11 +63,12 @@ Karena aplikasi berjalan di dalam Docker, cara paling mudah menjalankan test ada
 
 ## ⚙️ Asumsi & Keputusan Desain
 
-1.  **Deduplikasi di Database:** Kami memilih menggunakan *Database Unique Constraint* `(topic, event_id)` daripada Redis Cache untuk deduplikasi. Alasannya adalah untuk menjamin persistensi data yang kuat (*Strong Consistency*) bahkan jika container di-restart.
+1.  **Deduplikasi di Database:** Saya memilih menggunakan *Database Unique Constraint* `(topic, event_id)` daripada Redis Cache untuk deduplikasi. Alasannya adalah untuk menjamin persistensi data yang kuat (*Strong Consistency*) bahkan jika container di-restart.
 2.  **Ordering:** Sistem menggunakan *Source Timestamp* untuk pengurutan log secara logikal saat pembacaan (`ORDER BY timestamp DESC`).
 3.  **Docker Network:** Semua komunikasi antar-service (Redis, Postgres, Python) terjadi di dalam jaringan internal `internal_network` yang terisolasi. Hanya port `8080` yang dibuka ke host.
 
 ## 📹 Video Demo & Laporan
 
-* **Laporan Lengkap (PDF):** [Lihat file report.pdf](./report.pdf) *(Akan diupdate)*
-* **Video Demo:** [Link YouTube] *(Akan diupdate)*
+* **Laporan Lengkap (PDF):** [Lihat file report.pdf](./report.pdf) atau https://docs.google.com/document/d/1PDl5318pIhLlY6E2u53FdFzIeuZWd_2yUlQQFq8CFn8/edit?usp=sharing
+
+* **Video Demo:** https://youtu.be/_K8bCeccsSA?si=Lue7_z6rgJqHfaij
