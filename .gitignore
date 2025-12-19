@@ -1,0 +1,21 @@
+# Python caches
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environment variables (Keamanan)
+.env
+.venv
+env/
+venv/
+
+# Docker volumes (Data database jangan diupload)
+pg_data/
+redis_data/
+
+# IDE settings
+.vscode/
+.idea/
+
+# Testing cache
+.pytest_cache/

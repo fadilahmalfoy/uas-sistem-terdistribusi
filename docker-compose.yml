@@ -1,0 +1,79 @@
+services:
+  # STORAGE: Database PostgreSQL
+  # Berfungsi sebagai 'Single Source of Truth' dan Dedup Store
+  storage:
+    image: postgres:16-alpine
+    container_name: uas_storage
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_DB=logs_db
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - internal_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d logs_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # BROKER: Redis
+  # Berfungsi sebagai Message Queue sementara
+  broker:
+    image: redis:7-alpine
+    container_name: uas_broker
+    volumes:
+      - redis_data:/data
+    networks:
+      - internal_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # AGGREGATOR: Service Utama (API & Consumer)
+  # Menerima request HTTP, push ke Redis, lalu consume dan simpan ke DB
+  aggregator:
+    platform: linux/amd64
+    build: ./aggregator
+    container_name: uas_aggregator
+    depends_on:
+      storage:
+        condition: service_healthy
+      broker:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://admin:secret@storage:5432/logs_db
+      - BROKER_URL=redis://broker:6379/0
+    ports:
+      - "8080:8080" 
+    networks:
+      - internal_network
+
+  # PUBLISHER: Event Generator
+  # Mensimulasikan pengiriman data ke Aggregator
+  publisher:
+    platform: linux/amd64
+    build: ./publisher
+    container_name: uas_publisher
+    depends_on:
+      - aggregator
+    environment:
+      - TARGET_URL=http://aggregator:8080/publish
+      - TICK_INTERVAL_MS=1 
+    networks:
+      - internal_network
+
+# Definisi Volume untuk Persistensi Data
+volumes:
+  pg_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# Definisi Jaringan Terisolasi
+networks:
+  internal_network:
+    driver: bridge
